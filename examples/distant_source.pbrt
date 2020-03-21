@@ -1,0 +1,31 @@
+LookAt 0 0 5
+       0 0 0
+       0 1 0
+
+Camera "orthographic"
+
+Sampler "sobol" "integer pixelsamples" 64
+
+Integrator "path" "integer maxdepth" 20
+
+Film "image" 
+    "integer xresolution" [400]
+    "integer yresolution" [400]
+
+WorldBegin
+    LightSource "distant"
+        "point from" [0 0 1]
+        "point to"   [0 0 0]
+        "rgb L" [1 1 1]
+    
+    
+    AttributeBegin
+        Material "disney"
+            "rgb color" [1 1 1]
+            "float metallic" 0.700000
+            "float roughness" 0.300000
+        Shape "sphere" "float radius" 1.000000
+        
+    AttributeEnd
+    
+WorldEnd

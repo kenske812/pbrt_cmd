@@ -53,14 +53,19 @@ class LookAt(StringGenerator):
 
 
 class Camera(StringGenerator):
-    def __init__(self, projection, fov=None):
+    def __init__(self, projection, fov=None, screen_window=None):
         self.projection = projection
         self.fov = fov
+        self.screen_window = screen_window #[x, -x, y, -y]
     
     def __str__(self):
         s = 'Camera "%s"\n' % self.projection
         if self.fov is not None:
             s += '    "float fov" %f\n' % (self.fov)
+        if self.screen_window is not None:
+            s += '    "float screenwindow" %s\n' % arr2str(self.screen_window)
+
+
         return s
 
 class Sampler(StringGenerator):
@@ -73,12 +78,16 @@ class Sampler(StringGenerator):
         return s
 
 class Integrator(StringGenerator):
-    def __init__(self, method, max_depth):
+    def __init__(self, method, max_depth, light_sample_strategy=None):
         self.method = method
         self.max_depth = max_depth
+        self.light_sample_strategy = light_sample_strategy
     
     def __str__(self):
         s = 'Integrator "%s" "integer maxdepth" %d\n' % (self.method, self.max_depth)
+        if self.light_sample_strategy is not None:
+            s += '    "string lightsamplestrategy" "%s"\n' % (self.light_sample_strategy)
+
         return s
 
 
@@ -102,18 +111,15 @@ class Film(StringGenerator):
     
 
 class PointSource(StringGenerator):
-    def __init__(self, p_from, spectrum, scale=1.0):
+    def __init__(self, p_from, spectrum):
         self.p_from = p_from
         self.spectrum = spectrum
         self.spectrum.name = "I"
-        self.scale = scale
     
     def __str__(self):
         s  = 'LightSource "point"\n'
         s += '    "point from" ' + arr2str(self.p_from) + "\n"
         s += '    ' + str(self.spectrum) + "\n"
-        if self.scale != 1.0:
-            s += '    "float scale" %f\n' % self.scale
 
         return s
 
@@ -133,12 +139,12 @@ class DistantSource(StringGenerator):
         return s
 
 class ProjectionSource(StringGenerator):
-    def __init__(self, spectrum, fov, mapname, scale=1):
+    def __init__(self, spectrum, fov, mapname, scale=1.0):
         self.spectrum = spectrum * scale
         self.spectrum.name = 'I'
         self.fov = fov
         self.mapname = mapname
-    
+        self.scale = scale
     def __str__(self):
         s  = 'LightSource "projection"\n'
         s += '    ' + str(self.spectrum) + "\n"
@@ -172,37 +178,17 @@ class AreaLightSource(StringGenerator):
 
 
 class Sphere(StringGenerator):
-    def __init__(self, r, zmin=None, zmax=None, phimax=360):
+    def __init__(self, r):
         self.r = r
-        self.phimax = phimax
-
-        if zmin is not None:
-            self.zmin = zmin
-        else:
-            self.zmin = -r
-
-        if zmax is not None:
-            self.zmax = zmax
-        else:
-            self.zmax = r
-
-
     def __str__(self):
-        s = 'Shape "sphere" "float radius" %f\n' % self.r 
-        if self.zmin != -self.r:
-            s += f'               "float zmin" {self.zmin}\n'
-        if self.zmax != self.r:
-            s += f'               "float zmax" {self.zmax}\n'
-        if self.phimax != 360:
-            s += f'               "float phimax" {self.phimax}\n'
-        return s
+        return 'Shape "sphere" "float radius" %f\n' % self.r 
 
 class Polymesh(StringGenerator):
     def __init__(self, fname):
         self.fname = fname
     
     def __str__(self):
-        return 'Shape "plymesh" "string filename" ["%s"]\n' % self.fname
+        return 'Shape "plymesh" "string filename" ["%s"]' % self.fname
 
 
 class Translate(StringGenerator):
@@ -529,12 +515,9 @@ class Spectrum:
     def __str__(self):
         return '"%s %s" %s' % (self.type, self.name, arr2str(self.val))
     
-    def __mul__(self, a):
-        self.val = [a*v for v in self.val]
+    def __mul__(self, v):
+        self.val = [a * v for a in self.val]
         return self
-
-    
-
 
         
 def world_block(s):

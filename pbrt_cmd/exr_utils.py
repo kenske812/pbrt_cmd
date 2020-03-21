@@ -21,7 +21,7 @@ def write_rgb_array(fname, rgb_img):
     """
     write numpy array to exr file.
     Args:
-        fname (Path or string): output filename.
+        fname (string): output filename.
         rgb_img (numpy.array): the shape should be (ch, h, w).
                                the channel should be 'r', 'g', 'b' order.
                                dtype must be float32 for now. 
